@@ -2,9 +2,8 @@ name: Automatic Approve
 
 permissions: {}
 
-# on:
-#   schedule:
-#     - cron: "*/5 * * * *"
+on:
+  workflow_dispatch:
 
 jobs:
   automatic_approve:
