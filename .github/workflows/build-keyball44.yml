@@ -23,7 +23,7 @@ jobs:
         submodules: recursive
 
     - name: Build Keyball44 firmware
-      run: make keyball/keyball44:via -j8
+      run: make keyball/keyball44:rvogt79 -j8
 
     - name: Archive firmware
       uses: actions/upload-artifact@v4
