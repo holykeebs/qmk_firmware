@@ -1,0 +1,36 @@
+name: Build QMK firmware
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+        - keyball.json
+
+    steps:
+
+    - name: Disable git safe directory checks
+      run : git config --global --add safe.directory '*'
+
+    - name: Checkout Holykeebs QMK fork
+      uses: actions/checkout@v4
+      with:
+        ref: hk-master
+        submodules: recursive
+
+    - name: Build Keyball44 firmware
+      run: make keyball/keyball44:via -j8
+
+    - name: Archive firmware
+      uses: actions/upload-artifact@v4
+      continue-on-error: true
+      with:
+        name: ${{ matrix.file }}_${{ github.actor }}
+        path: |
+          *.hex
+          *.bin
+          *.uf2
