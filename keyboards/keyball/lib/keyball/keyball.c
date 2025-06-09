@@ -50,6 +50,8 @@ keyball_t keyball = {
 
     .scroll_mode = false,
     .scroll_div  = 0,
+    .scroll_accumulated_h = 0,
+    .scroll_accumulated_v = 0,
 
     .pressing_keys = { BL, BL, BL, BL, BL, BL, 0 },
 };
@@ -159,8 +161,17 @@ __attribute__((weak)) void keyball_on_apply_motion_to_mouse_move(report_mouse_t 
 __attribute__((weak)) void keyball_on_apply_motion_to_mouse_scroll(report_mouse_t *report, report_mouse_t *output, bool is_left) {
     // consume motion of trackball.
     int16_t div = 1 << (keyball_get_scroll_div() - 1);
+#ifdef MY_SCROLL_IMPL
+    keyball.scroll_accumulated_h += report->x / (float)div;
+    keyball.scroll_accumulated_v += report->y / (float)div;
+    int16_t x = (int16_t)keyball.scroll_accumulated_h;
+    int16_t y = (int16_t)keyball.scroll_accumulated_v;
+    keyball.scroll_accumulated_h -= x;
+    keyball.scroll_accumulated_v -= y;
+#else
     int16_t x = divmod16(&report->x, div);
     int16_t y = divmod16(&report->y, div);
+#endif
 
     // apply to mouse report.
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39 || KEYBALL_MODEL == 147 || KEYBALL_MODEL == 44
@@ -425,6 +436,11 @@ bool keyball_get_scroll_mode(void) {
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
         keyball.scroll_mode_changed = timer_read32();
+#ifdef MY_SCROLL_IMPL
+        // Clear the scroll accumulators on mode change.
+        keyball.scroll_accumulated_h = 0.;
+        keyball.scroll_accumulated_v = 0.;
+#endif
     }
     keyball.scroll_mode = mode;
 }
