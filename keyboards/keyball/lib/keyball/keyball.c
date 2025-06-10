@@ -50,8 +50,10 @@ keyball_t keyball = {
 
     .scroll_mode = false,
     .scroll_div  = 0,
+#ifdef FRACTIONAL_SCROLL
     .scroll_accumulated_h = 0,
     .scroll_accumulated_v = 0,
+#endif
 
     .pressing_keys = { BL, BL, BL, BL, BL, BL, 0 },
 };

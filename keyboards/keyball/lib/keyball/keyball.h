@@ -160,7 +160,7 @@ typedef struct {
     bool     scroll_mode;
     uint32_t scroll_mode_changed;
     uint8_t  scroll_div;
-#ifdef MY_SCROLL_IMPL
+#ifdef FRACTIONAL_SCROLL
     float    scroll_accumulated_h;
     float    scroll_accumulated_v;
 #endif
