@@ -66,7 +66,7 @@ __attribute__((weak)) void keyball_on_adjust_layout(keyball_adjust_t v) {}
 //////////////////////////////////////////////////////////////////////////////
 // Static utilities
 
-#ifndef MY_SCROLL_IMPL
+#ifndef FRACTIONAL_SCROLL
 // divmod16 divides *v by div, returns the quotient, and assigns the remainder
 // to *v.
 static mouse_xy_report_t divmod16(mouse_xy_report_t *v, int16_t div) {
@@ -165,7 +165,7 @@ __attribute__((weak)) void keyball_on_apply_motion_to_mouse_move(report_mouse_t 
 __attribute__((weak)) void keyball_on_apply_motion_to_mouse_scroll(report_mouse_t *report, report_mouse_t *output, bool is_left) {
     // consume motion of trackball.
     int16_t div = 1 << (keyball_get_scroll_div() - 1);
-#ifdef MY_SCROLL_IMPL
+#ifdef FRACTIONAL_SCROLL
     keyball.scroll_accumulated_h += report->x / (float)div;
     keyball.scroll_accumulated_v += report->y / (float)div;
     int16_t x = (int16_t)keyball.scroll_accumulated_h;
@@ -440,7 +440,7 @@ bool keyball_get_scroll_mode(void) {
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
         keyball.scroll_mode_changed = timer_read32();
-#ifdef MY_SCROLL_IMPL
+#ifdef FRACTIONAL_SCROLL
         // Clear the scroll accumulators on mode change.
         keyball.scroll_accumulated_h = 0.;
         keyball.scroll_accumulated_v = 0.;
