@@ -24,9 +24,12 @@ PRESERVED_ASSETS = {
 UPLOAD_CHUNK = 50
 
 class Command:
-    def __init__(self, kb, km) -> None:
+    def __init__(self, kb, km, repo=None) -> None:
         self.kb = kb
         self.km = km
+        # Checkout to run `make` in; None builds in this repo. The vial fork's
+        # keyball61plus builds set this to the vial-qmk checkout.
+        self.repo = repo
         self.arguments = []
         self.left_pointing_device = None
         self.right_pointing_device = None
@@ -198,12 +201,15 @@ def run_build(command, base_dir):
     with open(log_path, 'wb') as log:
         log.write(f'{command.build()}\n\n'.encode())
         log.flush()
-        proc = subprocess.run(command.build_list(), stdout=log, stderr=subprocess.STDOUT)
+        proc = subprocess.run(command.build_list(), stdout=log, stderr=subprocess.STDOUT,
+                              cwd=command.repo)
 
     if proc.returncode != 0:
         raise BuildError(file_name, log_path, f'make exited with {proc.returncode}')
 
-    os.rename(f'{file_name}.uf2', destination)
+    # make drops <TARGET>.uf2 in the root of whichever checkout built it.
+    built = os.path.join(command.repo, f'{file_name}.uf2') if command.repo else f'{file_name}.uf2'
+    os.rename(built, destination)
     return file_name
 
 def _repo_state(repo_dir):
@@ -235,6 +241,12 @@ def _overlay_dir():
     val = out.split('=', 1)[1].strip() if '=' in out else ''
     return val if val and val != 'None' else None
 
+def _vial_dir():
+    """Where the vial-qmk fork lives: HK_VIAL_QMK env, else a sibling checkout
+    next to this repo. None if neither points at a checkout."""
+    candidate = os.environ.get('HK_VIAL_QMK') or os.path.join(os.path.dirname(_SCRIPT_DIR), 'vial-qmk')
+    return candidate if os.path.isdir(os.path.join(candidate, 'keyboards')) else None
+
 def commands_preamble():
     """Comment-line preamble recording the source state these builds came from: a
     timestamp and each contributing repo's branch + short hash (+ dirty). A
@@ -252,6 +264,11 @@ def commands_preamble():
         state = _repo_state(overlay)
         if state:
             lines.append(row('holykeebs-userspace', state))
+    vial = _vial_dir()
+    if vial:
+        state = _repo_state(vial)
+        if state:
+            lines.append(row('vial-qmk', state))
     lines.append('#')
     return '\n'.join(lines) + '\n'
 
@@ -289,6 +306,12 @@ def publish_preflight():
     else:
         problems.append('holykeebs-userspace: overlay not found (QMK_USERSPACE / qmk config user.overlay_dir)')
 
+    vial = _vial_dir()
+    if vial:
+        problems += _publish_repo_problems(vial, 'vial-qmk')
+    else:
+        problems.append('vial-qmk: checkout not found (HK_VIAL_QMK or ../vial-qmk)')
+
     if subprocess.run(['gh', 'auth', 'status'], capture_output=True).returncode != 0:
         problems.append('gh: not authenticated (run `gh auth login`)')
     return problems
@@ -300,6 +323,7 @@ def _gh(*args):
 def release_notes(firmware_count, debug_count):
     state = lambda d: (_repo_state(d) or 'unknown').replace('  ', ' @ ')
     overlay = _overlay_dir()
+    vial = _vial_dir()
     return '\n'.join([
         'Precompiled holykeebs firmware for every supported configuration. See the',
         '[firmware docs](https://docs.holykeebs.com/firmware/) for picking a file;',
@@ -308,6 +332,7 @@ def release_notes(firmware_count, debug_count):
         f'- generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
         f'- qmk_firmware: {state(_SCRIPT_DIR)}',
         f'- holykeebs-userspace: {state(overlay) if overlay else "unknown"}',
+        f'- vial-qmk: {state(vial) if vial else "unknown"}',
         f'- firmwares: {firmware_count} ({debug_count} debug)',
     ]) + '\n'
 
@@ -359,7 +384,8 @@ def publish(base_dir, commands, dry_run):
 
 def all_commands():
     """The full firmware matrix: dedicated keyball boards, the modular board x
-    pointing-device x OLED matrix, and keyball61plus, deduplicated."""
+    pointing-device x OLED matrix, and keyball61plus from both forks (this repo
+    and vial-qmk), deduplicated."""
     commands = [
         Command('keyball/keyball39', 'via'),
         Command('keyball/keyball44', 'via'),
@@ -379,6 +405,22 @@ def all_commands():
             if with_oled:
                 command.oled = 'yes'
             commands.append(command)
+
+    # The vial-qmk fork maintains the only other copy of keyball61plus (Vial
+    # needs its older QMK base), so its vial keymap builds inside that checkout
+    # and joins the matrix here. Skipped with a warning when the checkout is
+    # absent; a publish requires it (see publish_preflight).
+    vial = _vial_dir()
+    if vial:
+        for with_oled in (True, False):
+            command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
+            command.add_argument('USER_NAME=holykeebs')
+            if with_oled:
+                command.oled = 'yes'
+            commands.append(command)
+    else:
+        print('vial-qmk checkout not found (HK_VIAL_QMK or ../vial-qmk); '
+              'skipping keyball61plus vial builds')
 
     # Drop duplicate configurations. The console_enabled loop in build_commands()
     # regenerates every `via` build identically (CONSOLE only affects `hk`), which
@@ -416,9 +458,9 @@ def main() -> int:
                              f'{PUBLISH_REPO} \'{PUBLISH_TAG}\' release: upload all '
                              f'artifacts, prune stale remote assets (preserving '
                              f'externally-built ones), and refresh the release notes. '
-                             f'Requires this repo and the overlay to be on '
-                             f'{PUBLISH_BRANCH}, clean, and in sync with origin. '
-                             f'Implies --rebuild.')
+                             f'Requires this repo, the overlay, and the vial-qmk '
+                             f'checkout to be on {PUBLISH_BRANCH}, clean, and in '
+                             f'sync with origin. Implies --rebuild.')
     parser.add_argument('--dry-run', action='store_true',
                         help='with --publish: build everything and show what would be '
                              'uploaded/pruned without modifying the release.')
