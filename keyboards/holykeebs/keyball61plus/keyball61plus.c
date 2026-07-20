@@ -38,6 +38,13 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
 #ifdef OLED_ENABLE
 #    include "users/holykeebs/holykeebs.h"
 
+// Match the original keyball oledkit rotation: the master renders the info
+// panels at the driver's base rotation, the peripheral renders the logo
+// rotated 180 (the keyball logo art is drawn for that orientation).
+oled_rotation_t oled_init_kb(oled_rotation_t rotation) {
+    return is_keyboard_master() ? rotation : OLED_ROTATION_180;
+}
+
 // The peripheral half shows the Keyball logo (this board's heritage), matching
 // the original keyball lib's oledkit. The master half shows the live info panels
 // (handled by the holykeebs userspace). Glyphs 0x80..0xAF in the holykeebs
