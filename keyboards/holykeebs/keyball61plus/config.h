@@ -31,10 +31,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MATRIX_MASKED
 #define DEBOUNCE            5
 
-// Split hand detection. Serial driver/pin and split behavior (watchdog) are
+// Split hand detection. The PCB has a matrix-grid circuit (lROW2/lCOL3 via
+// lD33, left half only), but the sense path crosses two diodes in series
+// (lD33 plus the shared duplex column diode lD37), leaving the read pin at
+// ~1.0-1.4V — marginal against the RP2040 input threshold — so
+// SPLIT_HAND_MATRIX_GRID GP26, GP6 misreads on production boards. Until a PCB
+// rev lands the hand diode directly on the column pin, detect the hand from
+// the fitted PMW3360 instead (this variant only ships a right-side ball); see
+// users/holykeebs/hand.c. Serial driver/pin and split behavior (watchdog) are
 // provided by the holykeebs userspace.
-#define SPLIT_HAND_MATRIX_GRID  GP26, GP6
-#define SPLIT_HAND_MATRIX_GRID_LOW_IS_LEFT
+#define HK_HAND_FROM_POINTER
 
 // PMW3360 trackball sensor wiring (SPI). The sensor's driver, rotation, CPI and
 // scroll behavior are owned by the holykeebs userspace. Physical orientation
