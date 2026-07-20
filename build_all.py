@@ -398,13 +398,12 @@ def all_commands():
     # keyball61plus runs on the holykeebs userspace but isn't part of the modular
     # POINTING_DEVICE matrix above: it's always built dual-PMW3360 combined (the
     # installed ball count is detected at runtime), so add its variants directly.
+    # Keyballs ship with the OLED fitted, so every build enables it.
     for km in ('via', 'default'):
-        for with_oled in (True, False):
-            command = Command('holykeebs/keyball61plus', km)
-            command.add_argument('USER_NAME=holykeebs')
-            if with_oled:
-                command.oled = 'yes'
-            commands.append(command)
+        command = Command('holykeebs/keyball61plus', km)
+        command.add_argument('USER_NAME=holykeebs')
+        command.oled = 'yes'
+        commands.append(command)
 
     # The vial-qmk fork maintains the only other copy of keyball61plus (Vial
     # needs its older QMK base), so its vial keymap builds inside that checkout
@@ -412,12 +411,10 @@ def all_commands():
     # absent; a publish requires it (see publish_preflight).
     vial = _vial_dir()
     if vial:
-        for with_oled in (True, False):
-            command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
-            command.add_argument('USER_NAME=holykeebs')
-            if with_oled:
-                command.oled = 'yes'
-            commands.append(command)
+        command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
+        command.add_argument('USER_NAME=holykeebs')
+        command.oled = 'yes'
+        commands.append(command)
     else:
         print('vial-qmk checkout not found (HK_VIAL_QMK or ../vial-qmk); '
               'skipping keyball61plus vial builds')
