@@ -20,6 +20,7 @@
 #include <string.h>
 #include "timer.h"
 #include "gpio.h"
+#include "pointing_device_internal.h"
 
 #ifdef MOUSEKEY_ENABLE
 #    include "mousekey.h"
@@ -288,6 +289,52 @@ report_mouse_t pointing_device_adjust_by_defines(report_mouse_t mouse_report) {
     return mouse_report;
 }
 
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED) && !defined(POINTING_DEVICE_DRIVER_ps2)
+#    ifndef POINTING_DEVICE_INIT_RETRIES
+#        define POINTING_DEVICE_INIT_RETRIES 2
+#    endif
+#    ifndef POINTING_DEVICE_INIT_RETRY_INTERVAL_MS
+#        define POINTING_DEVICE_INIT_RETRY_INTERVAL_MS 1000
+#    endif
+
+/**
+ * @brief Re-attempts a failed local sensor init for a short window after boot.
+ *
+ * A combined build carries on when the local sensor fails init - the other
+ * half's report still flows - which also makes the failure silent and
+ * permanent: nothing calls init() again, so this half reports nothing until the
+ * next power cycle. Some of those failures pass on their own, because init runs
+ * early and a peripheral is powered through the TRRS cable, so its sensor can
+ * still be ramping when the probe lands.
+ *
+ * Deliberately bounded. A half that legitimately has no sensor (a keyball61plus
+ * built for a single ball) fails every attempt, and an attempt blocks - a
+ * PMW3360 waits 50ms and uploads its SROM before the signature check fails - so
+ * retry twice and then leave it alone rather than spending loop time forever.
+ * The keyboard/user init hooks are not re-run; only the driver is re-probed.
+ */
+static void pointing_device_retry_init(void) {
+    static uint8_t  attempts_left = POINTING_DEVICE_INIT_RETRIES;
+    static uint32_t last_attempt  = 0;
+
+    if (attempts_left == 0 || pointing_device_status == POINTING_DEVICE_STATUS_SUCCESS) {
+        return;
+    }
+    // last_attempt starts at 0, so this also spaces the first attempt an
+    // interval away from boot.
+    if (timer_elapsed32(last_attempt) < POINTING_DEVICE_INIT_RETRY_INTERVAL_MS) {
+        return;
+    }
+    last_attempt = timer_read32();
+    attempts_left--;
+
+    if (pointing_device_driver->init()) {
+        pointing_device_status = POINTING_DEVICE_STATUS_SUCCESS;
+        pd_dprintf("pointing device: init succeeded on retry, %d attempt(s) left\n", attempts_left);
+    }
+}
+#endif
+
 /**
  * @brief Retrieves and processes pointing device data.
  *
@@ -296,6 +343,11 @@ report_mouse_t pointing_device_adjust_by_defines(report_mouse_t mouse_report) {
  *
  */
 __attribute__((weak)) bool pointing_device_task(void) {
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED) && !defined(POINTING_DEVICE_DRIVER_ps2)
+    // Above the master check below on purpose: the target side needs this too,
+    // and its own sensor read lives in the split transaction handler.
+    pointing_device_retry_init();
+#endif
 #if defined(SPLIT_POINTING_ENABLE)
     // Don't poll the target side pointing device.
     if (!is_keyboard_master()) {
