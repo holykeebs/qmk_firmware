@@ -119,6 +119,11 @@ always passes `USER_NAME=holykeebs` and a unique `TARGET` per build (so parallel
 builds don't clobber each other). Run `python3 build_all.py` (`--help` for jobs
 / parallelism).
 
+The matrix also covers the Vial firmware, which builds inside the sibling
+`../vial-qmk` checkout (`HK_VIAL_QMK` overrides the path): `keyball61plus:vial`
+plus `keyball/keyball{39,44,61}:vial`. Those keyball boards keep the stock
+Keyball firmware there and take no build vars.
+
 `python3 build_all.py --publish` is the formal release flow: it requires this
 repo **and** the overlay to be on `hk-master`, clean, and in sync with origin,
 forces a full rebuild, then syncs the matrix to the

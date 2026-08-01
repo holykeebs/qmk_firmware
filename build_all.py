@@ -383,9 +383,9 @@ def publish(base_dir, commands, dry_run):
     return 0
 
 def all_commands():
-    """The full firmware matrix: dedicated keyball boards, the modular board x
-    pointing-device x OLED matrix, and keyball61plus from both forks (this repo
-    and vial-qmk), deduplicated."""
+    """The full firmware matrix: dedicated keyball boards (VIA here, Vial from
+    the vial-qmk fork), the modular board x pointing-device x OLED matrix, and
+    keyball61plus from both forks (this repo and vial-qmk), deduplicated."""
     commands = [
         Command('keyball/keyball39', 'via'),
         Command('keyball/keyball44', 'via'),
@@ -405,19 +405,23 @@ def all_commands():
         command.oled = 'yes'
         commands.append(command)
 
-    # The vial-qmk fork maintains the only other copy of keyball61plus (Vial
-    # needs its older QMK base), so its vial keymap builds inside that checkout
-    # and joins the matrix here. Skipped with a warning when the checkout is
-    # absent; a publish requires it (see publish_preflight).
+    # Vial builds live in the vial-qmk fork (Vial needs its older QMK base), so
+    # they build inside that checkout and join the matrix here. Skipped with a
+    # warning when the checkout is absent; a publish requires it (see
+    # publish_preflight). keyball61plus runs on the userspace; keyball39/44/61
+    # carry the stock keyball firmware there and take no build vars, their
+    # keymap rules.mk already enabling RGBLIGHT and the OLED.
     vial = _vial_dir()
     if vial:
         command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
         command.add_argument('USER_NAME=holykeebs')
         command.oled = 'yes'
         commands.append(command)
+        for kb in ('keyball/keyball39', 'keyball/keyball44', 'keyball/keyball61'):
+            commands.append(Command(kb, 'vial', repo=vial))
     else:
         print('vial-qmk checkout not found (HK_VIAL_QMK or ../vial-qmk); '
-              'skipping keyball61plus vial builds')
+              'skipping vial builds')
 
     # Drop duplicate configurations. The console_enabled loop in build_commands()
     # regenerates every `via` build identically (CONSOLE only affects `hk`), which
