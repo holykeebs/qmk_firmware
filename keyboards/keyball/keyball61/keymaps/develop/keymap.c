@@ -28,13 +28,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_GRV   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                            KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_EQL   ,
     KC_LCTL  , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                            KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT  ,
     KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     , SCRL_TO  ,      KC_RBRC  , KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_ENT   ,
-    KC_LGUI  , KC_APP   , KC_HOME  , KC_LALT  , SCRL_MO  ,KC_MS_BTN1, MO(1)    ,      MO(1)    , KC_SPC   , KC_RALT  , KC_PGUP  , KC_PGDN  , KC_BSLS  , KC_RGUI
+    KC_LGUI  , KC_APP   , KC_HOME  , KC_LALT  , SCRL_MO  , MS_BTN1  , MO(1)    ,      MO(1)    , KC_SPC   , KC_RALT  , KC_PGUP  , KC_PGDN  , KC_BSLS  , KC_RGUI
   ),
 
   [1] = LAYOUT_universal(
-    RGB_TOG  , _______  , _______  , _______  , _______  , _______  ,                            RGB_M_P  , RGB_M_B  , RGB_M_R  , RGB_M_SW , RGB_M_SN , RGB_M_K  ,
-    RGB_MOD  , RGB_HUI  , RGB_SAI  , RGB_VAI  , _______  , _______  ,                            RGB_M_X  , RGB_M_G  , RGB_M_T  , RGB_M_TW , _______  , _______  ,
-    RGB_RMOD , RGB_HUD  , RGB_SAD  , RGB_VAD  , _______  , _______  ,                            CPI_D1K  , CPI_D100 , CPI_I100 , CPI_I1K  , KBC_SAVE , KBC_RST  ,
+    UG_TOGG  , _______  , _______  , _______  , _______  , _______  ,                            RGB_M_P  , RGB_M_B  , RGB_M_R  , RGB_M_SW , RGB_M_SN , RGB_M_K  ,
+    UG_NEXT  , UG_HUEU  , UG_SATU  , UG_VALU  , _______  , _______  ,                            RGB_M_X  , RGB_M_G  , RGB_M_T  , RGB_M_TW , _______  , _______  ,
+    UG_PREV  , UG_HUED  , UG_SATD  , UG_VALD  , _______  , _______  ,                            CPI_D1K  , CPI_D100 , CPI_I100 , CPI_I1K  , KBC_SAVE , KBC_RST  ,
     _______  , _______  , SCRL_DVD , SCRL_DVI , SCRL_MO  , SCRL_TO  , EE_CLR   ,      EE_CLR   , _______  , _______  , _______  , _______  , _______  , _______  ,
     QK_BOOT  , _______  , _______  , _______  , _______  , _______  , _______  ,      _______  , _______  , _______  , _______  , _______  , _______  , QK_BOOT
   ),

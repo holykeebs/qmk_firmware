@@ -6,16 +6,16 @@
     "processor": "RP2040",
     "diode_direction": "COL2ROW",
     "features": {
+        "backlight": true,
         "bootmagic": true,
         "command": false,
-        "console": false,
         "extrakey": true,
         "mousekey": true,
         "nkro": true
     },
     "matrix_pins": {
-        "cols": ["GP29", "GP28", "GP27", "GP26", "GP15", "GP14"],
-        "rows": ["GP7", "GP8", "GP9", "GP10", "GP11", "GP12", "GP13"]
+        "cols": ["GP12", "GP11", "GP10", "GP9", "GP8", "GP7"],
+        "rows": ["GP19", "GP18", "GP17", "GP16", "GP15", "GP14", "GP13"]
     },
     "url": "",
     "usb": {

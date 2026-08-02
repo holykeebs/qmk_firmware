@@ -25,7 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifndef KEYBALL_SCROLL_DIV_DEFAULT
-#    define KEYBALL_SCROLL_DIV_DEFAULT 3 // 4: 1/8 (1/2^(n-1))
+#    ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
+#        define KEYBALL_SCROLL_DIV_DEFAULT 3 // 3: ×2 speed
+#    else
+#        define KEYBALL_SCROLL_DIV_DEFAULT 4 // 4: 1/8 (1/2^(n-1))
+#    endif
 #endif
 
 #ifndef KEYBALL_SCROLLBALL_INHIVITOR
@@ -44,13 +48,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KEYBALL_SCROLLSNAP_TENSION_THRESHOLD
 #    define KEYBALL_SCROLLSNAP_TENSION_THRESHOLD 12
 #endif
-
-/// Specify SROM ID to be uploaded PMW3360DW (optical sensor).  It will be
-/// enabled high CPI setting or so.  Valid valus are 0x04 or 0x81.  Define this
-/// in your config.h to be enable.  Please note that using this option will
-/// increase the firmware size by more than 4KB.
-//#define KEYBALL_PMW3360_UPLOAD_SROM_ID 0x04
-//#define KEYBALL_PMW3360_UPLOAD_SROM_ID 0x81
 
 /// Defining this macro keeps two functions intact: keycode_config() and
 /// mod_config() in keycode_config.c.
@@ -265,7 +262,4 @@ uint16_t keyball_get_cpi(void);
 /// value +1 and multiplied by 100:
 ///
 ///     CPI = (v + 1) * 100
-///
-/// In addition, if you do not upload SROM, the maximum value will be limited
-/// to 34 (3500CPI).
 void keyball_set_cpi(uint16_t cpi);

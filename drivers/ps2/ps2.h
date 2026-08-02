@@ -85,6 +85,10 @@ POSSIBILITY OF SUCH DAMAGE.
 extern uint8_t ps2_error;
 
 void    ps2_host_init(void);
+// Releases the host driver's bus pins (weak no-op for drivers without one).
+// Called when init discovers there's no device attached, so the pins can be
+// repurposed.
+void    ps2_host_deinit(void);
 uint8_t ps2_host_send(uint8_t data);
 uint8_t ps2_host_recv_response(void);
 uint8_t ps2_host_recv(void);

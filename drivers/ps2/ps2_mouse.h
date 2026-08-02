@@ -161,7 +161,7 @@ typedef enum ps2_mouse_sample_rate_e {
     PS2_MOUSE_200_SAMPLES_SEC = 200,
 } ps2_mouse_sample_rate_t;
 
-void ps2_mouse_init(void);
+bool ps2_mouse_init(void);
 
 void ps2_mouse_init_user(void);
 

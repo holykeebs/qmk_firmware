@@ -38,23 +38,49 @@ static inline void ps2_mouse_clear_report(report_mouse_t *mouse_report);
 static inline void ps2_mouse_enable_scrolling(void);
 static inline void ps2_mouse_scroll_button_task(report_mouse_t *mouse_report);
 
+static inline bool side_has_trackpoint(void) {
+#if defined(HK_POINTING_DEVICE_LEFT_TRACKPOINT) && defined(HK_POINTING_DEVICE_RIGHT_TRACKPOINT)
+    return true;
+#else
+    // holykeebs/rules.mk sets the side with the trackpoint to be main when there's only one trackpoint.
+    return is_keyboard_master();
+#endif
+}
+
 /* ============================= IMPLEMENTATION ============================ */
 
+// Host drivers without a teardown fall back to a no-op; the RP2040 vendor driver
+// provides a real one so a failed init can release the bus pins.
+__attribute__((weak)) void ps2_host_deinit(void) {}
+
 /* supports only 3 button mouse at this time */
-void ps2_mouse_init(void) {
-    if (!is_keyboard_master()) {
-        return;
+bool ps2_mouse_init(void) {
+    if (!side_has_trackpoint()) {
+        return true;
     }
 
     ps2_host_init();
 
     wait_ms(PS2_MOUSE_INIT_DELAY); // wait for powering up
 
+    // The send/receive macros only log errors, so latch ps2_error across the
+    // reset handshake: it stays clear only if the device actually answered.
+    ps2_error = PS2_ERR_NONE;
+
     PS2_MOUSE_SEND(PS2_MOUSE_RESET, "ps2_mouse_init: sending reset");
     // Spec calls for 500ms sleep after reset.
     wait_ms(500);
 
     PS2_MOUSE_RECEIVE("ps2_mouse_init: read BAT");
+    if (ps2_error != PS2_ERR_NONE) {
+        // No response: there's no trackpoint on this half (e.g. USB plugged into
+        // the wrong half of a split). Report the failure honestly so
+        // pointing_device_get_status() reflects reality, and tear the host driver
+        // down so the caller can repurpose the pins: a state machine stalled
+        // mid-frame would otherwise keep driving them.
+        ps2_host_deinit();
+        return false;
+    }
     PS2_MOUSE_RECEIVE("ps2_mouse_init: read DevID");
 
 #ifdef PS2_MOUSE_USE_REMOTE_MODE
@@ -74,6 +100,7 @@ void ps2_mouse_init(void) {
 
     ps2_mouse_init_user();
 
+    return true;
 }
 
 __attribute__((weak)) void ps2_mouse_init_user(void) {}
@@ -93,7 +120,7 @@ void ps2_mouse_task(void) {
 }
 
 bool ps2_mouse_read(report_mouse_t* mouse_report) {
-    if (!is_keyboard_master()) {
+    if (!side_has_trackpoint()) {
         return false;
     }
 

@@ -1,7 +1,6 @@
 {
     "keyboard_name": "Lily58",
     "manufacturer": "liliums",
-    "url": "",
     "maintainer": "liliums",
     "usb": {
         "vid": "0x04D8",
@@ -9,7 +8,8 @@
         "device_version": "1.0.0"
     },
     "features": {
-        "oled": true
+        "oled": true,
+        "rgblight": true
     },
     "matrix_pins": {
         "cols": ["GP27", "GP26", "GP22", "GP20", "GP23", "GP21"],
@@ -18,9 +18,6 @@
     "diode_direction": "COL2ROW",
     "split": {
         "enabled": true
-    },
-    "rgblight": {
-        "led_count": 12
     },
     "ws2812": {
         "pin": "GP0",
@@ -100,5 +97,136 @@
                 {"matrix": [9, 1], "x": 13, "y": 4.15}
             ]
         }
+    },
+    "rgblight": {
+        "led_count": 70,
+        "split_count": [35, 35],
+        "animations": {
+            "breathing": true,
+            "rainbow_mood": true,
+            "rainbow_swirl": true,
+            "snake": true,
+            "knight": true,
+            "christmas": true,
+            "static_gradient": true,
+            "rgb_test": true,
+            "alternating": true,
+            "twinkle": true
+        },
+        "default": {
+            "animation": "rainbow_swirl"
+        }
+    },
+    "rgb_matrix": {
+        "driver": "ws2812",
+        "default": {
+            "animation": "cycle_left_right",
+            "speed": 50
+        },
+        "layout": [
+            {"x": 85, "y": 16, "flags": 2},
+            {"x": 50, "y": 13, "flags": 2},
+            {"x": 16, "y": 20, "flags": 2},
+            {"x": 16, "y": 38, "flags": 2},
+            {"x": 50, "y": 48, "flags": 2},
+            {"x": 85, "y": 52, "flags": 2},
+            {"matrix": [3, 5], "x": 95, "y": 63, "flags": 1},
+            {"matrix": [2, 5], "x": 85, "y": 39, "flags": 4},
+            {"matrix": [1, 5], "x": 85, "y": 21, "flags": 4},
+            {"matrix": [0, 5], "x": 85, "y": 4, "flags": 4},
+            {"matrix": [0, 4], "x": 68, "y": 2, "flags": 4},
+            {"matrix": [1, 4], "x": 68, "y": 19, "flags": 4},
+            {"matrix": [2, 4], "x": 68, "y": 37, "flags": 4},
+            {"matrix": [3, 4], "x": 80, "y": 58, "flags": 1},
+            {"matrix": [3, 3], "x": 60, "y": 55, "flags": 1},
+            {"matrix": [2, 3], "x": 50, "y": 35, "flags": 4},
+            {"matrix": [1, 3], "x": 50, "y": 13, "flags": 4},
+            {"matrix": [0, 3], "x": 50, "y": 0, "flags": 4},
+            {"matrix": [0, 2], "x": 33, "y": 3, "flags": 4},
+            {"matrix": [1, 2], "x": 33, "y": 20, "flags": 4},
+            {"matrix": [2, 2], "x": 33, "y": 37, "flags": 4},
+            {"matrix": [2, 1], "x": 16, "y": 42, "flags": 4},
+            {"matrix": [1, 1], "x": 16, "y": 24, "flags": 4},
+            {"matrix": [0, 1], "x": 16, "y": 7, "flags": 4},
+            {"matrix": [0, 0], "x": 0, "y": 7, "flags": 1},
+            {"matrix": [1, 0], "x": 0, "y": 24, "flags": 1},
+            {"matrix": [2, 0], "x": 0, "y": 41, "flags": 1},
+            {"x": 139, "y": 16, "flags": 2},
+            {"x": 174, "y": 13, "flags": 2},
+            {"x": 208, "y": 20, "flags": 2},
+            {"x": 208, "y": 38, "flags": 2},
+            {"x": 174, "y": 48, "flags": 2},
+            {"x": 139, "y": 52, "flags": 2},
+            {"matrix": [7, 5], "x": 129, "y": 63, "flags": 1},
+            {"matrix": [6, 5], "x": 139, "y": 39, "flags": 4},
+            {"matrix": [5, 5], "x": 139, "y": 21, "flags": 4},
+            {"matrix": [4, 5], "x": 139, "y": 4, "flags": 4},
+            {"matrix": [4, 4], "x": 156, "y": 2, "flags": 4},
+            {"matrix": [5, 4], "x": 156, "y": 19, "flags": 4},
+            {"matrix": [6, 4], "x": 156, "y": 37, "flags": 4},
+            {"matrix": [7, 4], "x": 144, "y": 58, "flags": 1},
+            {"matrix": [7, 3], "x": 164, "y": 55, "flags": 1},
+            {"matrix": [6, 3], "x": 174, "y": 35, "flags": 4},
+            {"matrix": [5, 3], "x": 174, "y": 13, "flags": 4},
+            {"matrix": [4, 3], "x": 174, "y": 0, "flags": 4},
+            {"matrix": [4, 2], "x": 191, "y": 3, "flags": 4},
+            {"matrix": [5, 2], "x": 191, "y": 20, "flags": 4},
+            {"matrix": [6, 2], "x": 191, "y": 37, "flags": 4},
+            {"matrix": [6, 1], "x": 208, "y": 42, "flags": 4},
+            {"matrix": [5, 1], "x": 208, "y": 24, "flags": 4},
+            {"matrix": [4, 1], "x": 208, "y": 7, "flags": 4},
+            {"matrix": [4, 0], "x": 224, "y": 7, "flags": 1},
+            {"matrix": [5, 0], "x": 224, "y": 24, "flags": 1},
+            {"matrix": [6, 0], "x": 224, "y": 41, "flags": 1}
+        ],
+        "animations":{
+            "alphas_mods": true,
+            "gradient_up_down": true,
+            "gradient_left_right": true,
+            "breathing": true,
+            "band_sat": true,
+            "band_val": true,
+            "band_pinwheel_sat": true,
+            "band_pinwheel_val": true,
+            "band_spiral_sat": true,
+            "band_spiral_val": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "rainbow_moving_chevron": true,
+            "cycle_out_in": true,
+            "cycle_out_in_dual": true,
+            "cycle_pinwheel": true,
+            "cycle_spiral": true,
+            "dual_beacon": true,
+            "rainbow_beacon": true,
+            "rainbow_pinwheels": true,
+            "flower_blooming": true,
+            "raindrops": true,
+            "jellybean_raindrops": true,
+            "hue_breathing": true,
+            "hue_pendulum": true,
+            "hue_wave": true,
+            "pixel_rain": true,
+            "pixel_flow": true,
+            "pixel_fractal": true,
+            "typing_heatmap": true,
+            "digital_rain": true,
+            "solid_reactive_simple": true,
+            "solid_reactive": true,
+            "solid_reactive_wide": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_cross": true,
+            "solid_reactive_multicross": true,
+            "solid_reactive_nexus": true,
+            "solid_reactive_multinexus": true,
+            "splash": true,
+            "multisplash": true,
+            "solid_splash": true,
+            "solid_multisplash": true
+        },
+        "max_brightness": 128,
+        "sleep": true,
+        "split_count": [35, 35]
     }
 }

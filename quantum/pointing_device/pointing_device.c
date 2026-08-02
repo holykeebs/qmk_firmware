@@ -20,9 +20,14 @@
 #include <string.h>
 #include "timer.h"
 #include "gpio.h"
+#include "pointing_device_internal.h"
 
 #ifdef MOUSEKEY_ENABLE
 #    include "mousekey.h"
+#endif
+
+#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
+#    include "usb_descriptor_common.h"
 #endif
 
 #if (defined(POINTING_DEVICE_ROTATION_90) + defined(POINTING_DEVICE_ROTATION_180) + defined(POINTING_DEVICE_ROTATION_270)) > 1
@@ -76,14 +81,21 @@ uint16_t pointing_device_get_shared_cpi(void) {
 
 #endif // defined(SPLIT_POINTING_ENABLE)
 
-static report_mouse_t local_mouse_report         = {};
-static bool           pointing_device_force_send = false;
+static report_mouse_t           local_mouse_report         = {};
+static bool                     pointing_device_force_send = false;
+static pointing_device_status_t pointing_device_status     = POINTING_DEVICE_STATUS_UNKNOWN;
+
+#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
+static uint16_t hires_scroll_resolution;
+#endif
 
 #define POINTING_DEVICE_DRIVER_CONCAT(name) name##_pointing_device_driver
 #define POINTING_DEVICE_DRIVER(name) POINTING_DEVICE_DRIVER_CONCAT(name)
 
 #ifdef POINTING_DEVICE_DRIVER_custom
-__attribute__((weak)) void           pointing_device_driver_init(void) {}
+__attribute__((weak)) bool pointing_device_driver_init(void) {
+    return false;
+}
 __attribute__((weak)) report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     return mouse_report;
 }
@@ -101,6 +113,11 @@ const pointing_device_driver_t custom_pointing_device_driver = {
 #endif
 
 const pointing_device_driver_t *pointing_device_driver = &POINTING_DEVICE_DRIVER(POINTING_DEVICE_DRIVER_NAME);
+
+__attribute__((weak)) void           pointing_device_init_modules(void) {}
+__attribute__((weak)) report_mouse_t pointing_device_task_modules(report_mouse_t mouse_report) {
+    return mouse_report;
+}
 
 /**
  * @brief Keyboard level code pointing device initialisation
@@ -167,7 +184,11 @@ __attribute__((weak)) void pointing_device_init(void) {
     if ((POINTING_DEVICE_THIS_SIDE))
 #endif
     {
-        pointing_device_driver->init();
+        if (pointing_device_driver->init()) {
+            pointing_device_status = POINTING_DEVICE_STATUS_SUCCESS;
+        } else {
+            pointing_device_status = POINTING_DEVICE_STATUS_INIT_FAILED;
+        }
 #ifdef POINTING_DEVICE_MOTION_PIN
 #    ifdef POINTING_DEVICE_MOTION_PIN_ACTIVE_LOW
         gpio_set_pin_input_high(POINTING_DEVICE_MOTION_PIN);
@@ -176,9 +197,38 @@ __attribute__((weak)) void pointing_device_init(void) {
 #    endif
 #endif
     }
+#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
+    hires_scroll_resolution = POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER;
+    for (int i = 0; i < POINTING_DEVICE_HIRES_SCROLL_EXPONENT; i++) {
+        hires_scroll_resolution *= 10;
+    }
+#endif
 
+    pointing_device_init_modules();
     pointing_device_init_kb();
     pointing_device_init_user();
+}
+
+/**
+ * @brief Gets status of pointing device
+ *
+ * Returns current pointing device status
+ * @return pointing_device_status_t
+ */
+__attribute__((weak)) pointing_device_status_t pointing_device_get_status(void) {
+#ifdef SPLIT_POINTING_ENABLE
+    // Assume target side is always good, split transaction checksum should stop additional reports being generated.
+    return POINTING_DEVICE_THIS_SIDE ? pointing_device_status : POINTING_DEVICE_STATUS_SUCCESS;
+#else
+    return pointing_device_status;
+#endif
+}
+
+/**
+ * @brief Sets status of pointing device
+ */
+void pointing_device_set_status(pointing_device_status_t status) {
+    pointing_device_status = status;
 }
 
 /**
@@ -239,6 +289,52 @@ report_mouse_t pointing_device_adjust_by_defines(report_mouse_t mouse_report) {
     return mouse_report;
 }
 
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED) && !defined(POINTING_DEVICE_DRIVER_ps2)
+#    ifndef POINTING_DEVICE_INIT_RETRIES
+#        define POINTING_DEVICE_INIT_RETRIES 2
+#    endif
+#    ifndef POINTING_DEVICE_INIT_RETRY_INTERVAL_MS
+#        define POINTING_DEVICE_INIT_RETRY_INTERVAL_MS 1000
+#    endif
+
+/**
+ * @brief Re-attempts a failed local sensor init for a short window after boot.
+ *
+ * A combined build carries on when the local sensor fails init - the other
+ * half's report still flows - which also makes the failure silent and
+ * permanent: nothing calls init() again, so this half reports nothing until the
+ * next power cycle. Some of those failures pass on their own, because init runs
+ * early and a peripheral is powered through the TRRS cable, so its sensor can
+ * still be ramping when the probe lands.
+ *
+ * Deliberately bounded. A half that legitimately has no sensor (a keyball61plus
+ * built for a single ball) fails every attempt, and an attempt blocks - a
+ * PMW3360 waits 50ms and uploads its SROM before the signature check fails - so
+ * retry twice and then leave it alone rather than spending loop time forever.
+ * The keyboard/user init hooks are not re-run; only the driver is re-probed.
+ */
+static void pointing_device_retry_init(void) {
+    static uint8_t  attempts_left = POINTING_DEVICE_INIT_RETRIES;
+    static uint32_t last_attempt  = 0;
+
+    if (attempts_left == 0 || pointing_device_status == POINTING_DEVICE_STATUS_SUCCESS) {
+        return;
+    }
+    // last_attempt starts at 0, so this also spaces the first attempt an
+    // interval away from boot.
+    if (timer_elapsed32(last_attempt) < POINTING_DEVICE_INIT_RETRY_INTERVAL_MS) {
+        return;
+    }
+    last_attempt = timer_read32();
+    attempts_left--;
+
+    if (pointing_device_driver->init()) {
+        pointing_device_status = POINTING_DEVICE_STATUS_SUCCESS;
+        pd_dprintf("pointing device: init succeeded on retry, %d attempt(s) left\n", attempts_left);
+    }
+}
+#endif
+
 /**
  * @brief Retrieves and processes pointing device data.
  *
@@ -247,6 +343,11 @@ report_mouse_t pointing_device_adjust_by_defines(report_mouse_t mouse_report) {
  *
  */
 __attribute__((weak)) bool pointing_device_task(void) {
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED) && !defined(POINTING_DEVICE_DRIVER_ps2)
+    // Above the master check below on purpose: the target side needs this too,
+    // and its own sensor read lives in the split transaction handler.
+    pointing_device_retry_init();
+#endif
 #if defined(SPLIT_POINTING_ENABLE)
     // Don't poll the target side pointing device.
     if (!is_keyboard_master()) {
@@ -260,6 +361,17 @@ __attribute__((weak)) bool pointing_device_task(void) {
         return false;
     }
     last_exec = timer_read32();
+#endif
+
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED)
+    // In combined mode the status only reflects this half's sensor; a failed
+    // local init must not block the other half's report, so only the local
+    // read below is skipped (keyball-style boards ship one image and detect
+    // at runtime which halves actually have a sensor).
+#else
+    if (pointing_device_get_status() != POINTING_DEVICE_STATUS_SUCCESS) {
+        return false;
+    }
 #endif
 
     // Gather report info
@@ -279,8 +391,10 @@ __attribute__((weak)) bool pointing_device_task(void) {
 #    if defined(POINTING_DEVICE_COMBINED)
         static uint8_t old_buttons = 0;
         local_mouse_report.buttons = old_buttons;
-        local_mouse_report         = pointing_device_driver->get_report(local_mouse_report);
-        old_buttons                = local_mouse_report.buttons;
+        if (pointing_device_get_status() == POINTING_DEVICE_STATUS_SUCCESS) {
+            local_mouse_report = pointing_device_driver->get_report(local_mouse_report);
+        }
+        old_buttons = local_mouse_report.buttons;
 #    elif defined(POINTING_DEVICE_LEFT) || defined(POINTING_DEVICE_RIGHT)
         local_mouse_report = POINTING_DEVICE_THIS_SIDE ? pointing_device_driver->get_report(local_mouse_report) : shared_mouse_report;
 #    else
@@ -306,8 +420,9 @@ __attribute__((weak)) bool pointing_device_task(void) {
     local_mouse_report = is_keyboard_left() ? pointing_device_task_combined_kb(local_mouse_report, shared_mouse_report) : pointing_device_task_combined_kb(shared_mouse_report, local_mouse_report);
 #else
     local_mouse_report = pointing_device_adjust_by_defines(local_mouse_report);
-    local_mouse_report = pointing_device_task_kb(local_mouse_report);
 #endif
+    local_mouse_report = pointing_device_task_modules(local_mouse_report);
+    local_mouse_report = pointing_device_task_kb(local_mouse_report);
     // automatic mouse layer function
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
     pointing_device_task_auto_mouse(local_mouse_report);
@@ -404,10 +519,10 @@ void pointing_device_set_cpi_on_side(bool left, uint16_t cpi) {
  * @return mouse_hv_report_t clamped value
  */
 static inline mouse_hv_report_t pointing_device_hv_clamp(hv_clamp_range_t value) {
-    if (value < HV_REPORT_MIN) {
-        return HV_REPORT_MIN;
-    } else if (value > HV_REPORT_MAX) {
-        return HV_REPORT_MAX;
+    if (value < MOUSE_REPORT_HV_MIN) {
+        return MOUSE_REPORT_HV_MIN;
+    } else if (value > MOUSE_REPORT_HV_MAX) {
+        return MOUSE_REPORT_HV_MAX;
     } else {
         return value;
     }
@@ -420,10 +535,10 @@ static inline mouse_hv_report_t pointing_device_hv_clamp(hv_clamp_range_t value)
  * @return mouse_xy_report_t clamped value
  */
 static inline mouse_xy_report_t pointing_device_xy_clamp(xy_clamp_range_t value) {
-    if (value < XY_REPORT_MIN) {
-        return XY_REPORT_MIN;
-    } else if (value > XY_REPORT_MAX) {
-        return XY_REPORT_MAX;
+    if (value < MOUSE_REPORT_XY_MIN) {
+        return MOUSE_REPORT_XY_MIN;
+    } else if (value > MOUSE_REPORT_XY_MAX) {
+        return MOUSE_REPORT_XY_MAX;
     } else {
         return value;
     }
@@ -523,3 +638,9 @@ __attribute__((weak)) void pointing_device_keycode_handler(uint16_t keycode, boo
         pointing_device_send();
     }
 }
+
+#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
+uint16_t pointing_device_get_hires_scroll_resolution(void) {
+    return hires_scroll_resolution;
+}
+#endif

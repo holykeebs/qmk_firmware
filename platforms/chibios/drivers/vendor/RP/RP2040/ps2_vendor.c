@@ -172,6 +172,22 @@ void ps2_host_init(void) {
     pio_sm_set_enabled(pio, state_machine, true);
 }
 
+void ps2_host_deinit(void) {
+    if (state_machine < 0) {
+        return;
+    }
+
+    pio_set_irq0_source_enabled(pio, pis_sm0_rx_fifo_not_empty + state_machine, false);
+    pio_sm_set_enabled(pio, state_machine, false);
+    pio_sm_unclaim(pio, state_machine);
+    state_machine = -1;
+
+    // Release the bus pins: a state machine stalled mid-frame (no device ever
+    // clocked the transfer out) would otherwise keep driving them.
+    palSetLineMode(PS2_DATA_PIN, PAL_MODE_INPUT);
+    palSetLineMode(PS2_CLOCK_PIN, PAL_MODE_INPUT);
+}
+
 static int bit_parity(int x) {
     return !__builtin_parity(x);
 }
