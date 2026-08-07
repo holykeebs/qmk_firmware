@@ -132,11 +132,13 @@
         "driver": "ws2812",
         "max_brightness": 120,
         "animations": {
-            "cycle_left_right": true
+            "cycle_left_right": true,
+            "cycle_pinwheel": true
         },
         "default": {
+            "animation": "cycle_pinwheel",
             "speed": 32,
-            "val": 64
+            "val": 80
         },
         "sleep": true
     },
