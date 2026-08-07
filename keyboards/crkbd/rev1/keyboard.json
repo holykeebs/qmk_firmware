@@ -5,7 +5,7 @@
         "device_version": "0.0.1"
     },
     "features": {
-        "rgblight": true
+        "rgb_matrix": true
     },
     "matrix_pins": {
         "cols": [ "GP29", "GP28", "GP27", "GP26", "GP22", "GP20" ],
@@ -17,25 +17,6 @@
             "sync": {
                 "matrix_state": true
             }
-        }
-    },
-    "rgblight": {
-        "led_count": 54,
-        "split_count": [27, 27],
-        "animations": {
-            "breathing": true,
-            "rainbow_mood": true,
-            "rainbow_swirl": true,
-            "snake": true,
-            "knight": true,
-            "christmas": true,
-            "static_gradient": true,
-            "rgb_test": true,
-            "alternating": true,
-            "twinkle": true
-        },
-        "default": {
-            "animation": "rainbow_swirl"
         }
     },
     "ws2812": {
