@@ -7,8 +7,8 @@
 
 #define TAP_CODE_DELAY 5
 
-// Auto mouse layer: pointer motion temporarily activates the mouse layer (2),
-// which carries the mouse buttons. Pointing/scroll behavior comes from the
+// Auto mouse layer: pointer motion temporarily activates LOWER (1), which
+// carries the lily58-style mouse buttons. Pointing/scroll behavior comes from the
 // holykeebs userspace.
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
-#define AUTO_MOUSE_DEFAULT_LAYER 2
+#define AUTO_MOUSE_DEFAULT_LAYER 1

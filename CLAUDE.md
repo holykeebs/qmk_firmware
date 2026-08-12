@@ -89,7 +89,11 @@ make holykeebs/keyball61plus:via -e USER_NAME=holykeebs -e OLED=yes
 Keymaps: `via` (drives the dynamic ball layout) or `default`. `OLED=yes` shows the
 info panels on the master and the Keyball logo on the peripheral. Hires scroll is
 **on by default** for this board (its `rules.mk` forces `HK_HIRES_SCROLL`; the board
-is wired for it). Hold the layer-3 thumb key to scroll.
+is wired for it). Each half has a scroll wheel: rotation is an encoder
+(`encoder_map`), and the wheel's press is an ordinary matrix key — the inner
+row-3 key of its half (`[3,7]`/`[8,7]`). What the keys are bound to is keymap
+content: it lives in the keymap sources and is documented on the docs site's
+keymaps page, not here.
 
 ### Build variables
 
