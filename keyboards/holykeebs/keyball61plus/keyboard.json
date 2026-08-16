@@ -132,8 +132,8 @@
             "right": {
                 "rotary": [
                     {
-                        "pin_a": "GP13",
-                        "pin_b": "GP14"
+                        "pin_a": "GP14",
+                        "pin_b": "GP13"
                     }
                 ]
             }
