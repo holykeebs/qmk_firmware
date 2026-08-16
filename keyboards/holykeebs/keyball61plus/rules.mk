@@ -48,6 +48,14 @@ ENCODER_MAP_ENABLE = yes
 RGB_MATRIX_ENABLE = no
 RGB_MATRIX_DRIVER = ws2812
 
+# The per-key LED under each scroll wheel is held dark by default: the wheel
+# body sits over it and scatters the light instead of lighting a legend.
+# WHEEL_LED=yes lights it like any other key. Only meaningful with
+# RGB_MATRIX_ENABLE.
+ifeq ($(strip $(WHEEL_LED)), yes)
+    OPT_DEFS += -DHK_WHEEL_LED
+endif
+
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 
