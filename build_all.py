@@ -99,6 +99,8 @@ class Command:
             if argument.startswith('SIDE='):
                 side = argument[len('SIDE='):]
                 parts.append('flash_on_' + side)
+            elif argument == 'WHEEL_LED=yes':
+                parts.append('wheel_led')
             elif argument == 'CONSOLE=yes':
                 console = True
         if console:
@@ -399,11 +401,17 @@ def all_commands():
     # POINTING_DEVICE matrix above: it's always built dual-PMW3360 combined (the
     # installed ball count is detected at runtime), so add its variants directly.
     # Keyballs ship with the OLED fitted, so every build enables it.
+    # Both wheel-LED variants: the default holds the LED under each scroll wheel
+    # dark (the wheel body scatters it), WHEEL_LED=yes lights it like any other
+    # key, for whoever prefers that.
     for km in ('via', 'default'):
-        command = Command('holykeebs/keyball61plus', km)
-        command.add_argument('USER_NAME=holykeebs')
-        command.oled = 'yes'
-        commands.append(command)
+        for wheel_led in (False, True):
+            command = Command('holykeebs/keyball61plus', km)
+            command.add_argument('USER_NAME=holykeebs')
+            if wheel_led:
+                command.add_argument('WHEEL_LED=yes')
+            command.oled = 'yes'
+            commands.append(command)
 
     # Vial builds live in the vial-qmk fork (Vial needs its older QMK base), so
     # they build inside that checkout and join the matrix here. Skipped with a
@@ -413,10 +421,13 @@ def all_commands():
     # keymap rules.mk already enabling RGBLIGHT and the OLED.
     vial = _vial_dir()
     if vial:
-        command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
-        command.add_argument('USER_NAME=holykeebs')
-        command.oled = 'yes'
-        commands.append(command)
+        for wheel_led in (False, True):
+            command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
+            command.add_argument('USER_NAME=holykeebs')
+            if wheel_led:
+                command.add_argument('WHEEL_LED=yes')
+            command.oled = 'yes'
+            commands.append(command)
         for kb in ('keyball/keyball39', 'keyball/keyball44', 'keyball/keyball61'):
             commands.append(Command(kb, 'vial', repo=vial))
     else:
