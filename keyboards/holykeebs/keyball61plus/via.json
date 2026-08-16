@@ -4,6 +4,98 @@
   "productId": "0x3141",
   "matrix": { "rows": 10, "cols": 8 },
   "lighting": "qmk_rgblight",
+  "customKeycodes": [
+    {
+      "name": "HK_SAVE",
+      "title": "Save the current holykeebs settings to EEPROM",
+      "shortName": "HK\nSave"
+    },
+    {
+      "name": "HK_RESET",
+      "title": "Reset the holykeebs settings to their defaults",
+      "shortName": "HK\nRst"
+    },
+    {
+      "name": "HK_DUMP",
+      "title": "Dump the holykeebs settings to the console (debug firmware only)",
+      "shortName": "HK\nDump"
+    },
+    {
+      "name": "HK_P_SET_D",
+      "title": "Hold, then tap up/down to change the pointer sensitivity",
+      "shortName": "Sens\nSet"
+    },
+    {
+      "name": "HK_P_SET_S",
+      "title": "Hold, then tap up/down to change the sniping sensitivity",
+      "shortName": "Snipe\nSens"
+    },
+    {
+      "name": "HK_P_SET_THR",
+      "title": "Hold, then tap up/down to change the ball's scroll throttle",
+      "shortName": "Scrl\nThr"
+    },
+    {
+      "name": "HK_S_MODE",
+      "title": "Hold for sniping mode (slow, precise pointer)",
+      "shortName": "Snipe"
+    },
+    {
+      "name": "HK_S_MODE_T",
+      "title": "Toggle sniping mode",
+      "shortName": "Snipe\nTgl"
+    },
+    {
+      "name": "HK_D_MODE",
+      "title": "Hold for drag scroll (ball movement scrolls)",
+      "shortName": "Drag\nScrl"
+    },
+    {
+      "name": "HK_D_MODE_T",
+      "title": "Toggle drag scroll",
+      "shortName": "Drag\nTgl"
+    },
+    {
+      "name": "HK_C_SCROLL",
+      "title": "Cycle the scroll lock: off, horizontal, vertical",
+      "shortName": "Scrl\nLock"
+    },
+    {
+      "name": "HK_I_SCROLL",
+      "title": "Invert the ball's scroll direction",
+      "shortName": "Scrl\nInv"
+    },
+    {
+      "name": "HK_AML_T",
+      "title": "Toggle the auto-mouse layer",
+      "shortName": "Auto\nMouse"
+    },
+    {
+      "name": "HK_AML_UP",
+      "title": "Increase the auto-mouse layer timeout by 50ms",
+      "shortName": "AML\n+50"
+    },
+    {
+      "name": "HK_AML_DN",
+      "title": "Decrease the auto-mouse layer timeout by 50ms",
+      "shortName": "AML\n-50"
+    },
+    {
+      "name": "HK_BONGO_T",
+      "title": "Toggle the bongocat OLED animation (hold shift for the other half)",
+      "shortName": "Bongo"
+    },
+    {
+      "name": "HK_ENC_SCR_U",
+      "title": "Scroll up by one scroll wheel detent",
+      "shortName": "Scrl\nUp"
+    },
+    {
+      "name": "HK_ENC_SCR_D",
+      "title": "Scroll down by one scroll wheel detent",
+      "shortName": "Scrl\nDn"
+    }
+  ],
   "layouts" : {
     "labels": [
       [ "Ball availability", "None", "Right", "Left", "Dual" ]

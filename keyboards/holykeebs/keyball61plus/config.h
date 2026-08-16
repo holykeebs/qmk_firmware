@@ -55,15 +55,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // RGB Matrix data line.
 #define WS2812_DI_PIN GP0
 
-// Encoder press/release gap. Windows needs >0 ms between the v=1 and v=0
-// wheel reports or it drops the event. 10 ms matches what QMK's own
-// non-encoder-map default path uses (tap_code_delay(..., 10)).
-#define ENCODER_MAP_KEY_DELAY 10
+// Encoder press/release gap. encoder.c takes this delay twice per detent as a
+// blocking wait, stalling the matrix, the pointing device and the OLED with it,
+// so the wheels scroll through HK_ENCODER_SCROLL_UP/DOWN instead of mousekey:
+// those send nothing at key press time (the scroll rides the pointing-device
+// report), which is what the delay was guarding against — Windows drops the
+// wheel event when the v=1 and v=0 reports arrive together.
+#define ENCODER_MAP_KEY_DELAY 0
+
+// The right half's encoder footprint is mirrored, so the same pin order decodes
+// backwards there: keyboard.json swaps pin_a/pin_b for the right rotary only.
+// Verified on hardware — with both halves on the same order the wheels scroll
+// opposite ways; with the swap, spinning either wheel toward you decodes
+// counter-clockwise, which the encoder map turns into scroll down.
 
 // Hires scroll (enabled via the holykeebs userspace) tells the OS to divide
 // wheel deltas by 120. mousekey's default wheel_unit() is 1, which becomes
-// 1/120 of a scroll line — invisible. Bump the base wheel delta so
-// MS_WHLU/MS_WHLD send one full hires notch.
+// 1/120 of a scroll line — invisible. Bump the base wheel delta so MS_WHLU/
+// MS_WHLD send one full hires notch, for keymaps that bind them directly.
 #define MOUSEKEY_WHEEL_DELTA 120
 
 // RGB Matrix settings
