@@ -13,8 +13,8 @@ NKRO_ENABLE = no            # Enable N-Key Rollover
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 AUDIO_ENABLE = no           # Audio output
 
-# Duplex matrix. Private copy under lib/ so the released keyball61 (which keeps
-# its own copy under keyboards/keyball/lib) is unaffected by changes here.
+# Duplex matrix. Private copy under lib/ (holykeebs/keyball61 carries its own),
+# so the two boards can diverge without affecting each other.
 CUSTOM_MATRIX = lite
 SRC += lib/duplexmatrix/duplexmatrix.c
 
