@@ -5,23 +5,32 @@
         "device_version": "0.0.1"
     },
     "features": {
-        "rgb_matrix": true
+        "rgblight": true
+    },
+    "build": {
+        "lto": true
     },
     "matrix_pins": {
-        "cols": [ "GP29", "GP28", "GP27", "GP26", "GP22", "GP20" ],
-        "rows": [ "GP4", "GP5", "GP6", "GP7" ]
+        "cols": [ "F4", "F5", "F6", "F7", "B1", "B3" ],
+        "rows": [ "D4", "C6", "D7", "E6" ]
     },
     "diode_direction": "COL2ROW",
     "split": {
+        "serial": {
+            "pin": "D2"
+        },
         "transport": {
             "sync": {
                 "matrix_state": true
             }
         }
     },
+    "rgblight": {
+        "led_count": 54,
+        "split_count": [27, 27]
+    },
     "ws2812": {
-        "pin": "GP0",
-        "driver": "vendor"
+        "pin": "D3"
     },
     "rgb_matrix": {
         "split_count": [27, 27],
@@ -82,6 +91,5 @@
             {"matrix": [6, 0], "x": 224, "y": 41, "flags": 1}
         ]
     },
-    "processor": "RP2040",
-    "bootloader": "rp2040"
+    "development_board": "promicro"
 }

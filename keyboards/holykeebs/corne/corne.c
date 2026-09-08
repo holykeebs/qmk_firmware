@@ -33,7 +33,7 @@ __attribute__((weak)) const keypos_t PROGMEM hand_swap_config[MATRIX_ROWS][MATRI
 };
 #endif
 
-#ifdef OLED_ENABLE
+#if defined(OLED_ENABLE) && !defined(POINTING_DEVICE_ENABLE)
 
 oled_rotation_t oled_init_kb(oled_rotation_t rotation) {
     if (!is_keyboard_master()) {

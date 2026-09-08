@@ -16,6 +16,8 @@
 
 #pragma once
 
-#ifndef OLED_FONT_H
-#    define OLED_FONT_H "keyboards/crkbd/lib/glcdfont.c"
+#if !defined(POINTING_DEVICE_ENABLE)
+#   ifndef OLED_FONT_H
+#      define OLED_FONT_H "keyboards/holykeebs/corne/lib/glcdfont.c"
+#   endif
 #endif
