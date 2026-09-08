@@ -52,7 +52,7 @@ to the RP2040 bootloader drive.
 - sets `SERIAL_DRIVER = vendor` for splits.
 
 The board-level `rules.mk` of `holykeebs/corne`, `holykeebs/lily58`,
-`holykeebs/sweeq`, `holykeebs/spankbd` and `holykeebs/keyball61plus` sets it,
+`holykeebs/sweeq`, `holykeebs/spankbd` and every `holykeebs/keyball*` sets it,
 so bare builds of those (and CI's mass-compile, which passes no `-e` vars)
 work; passing it on the command line is redundant but harmless. `aztec42`
 does not set it and still needs the flag.
@@ -129,15 +129,21 @@ the master from USB, so no master side is pinned (the userspace skips the forced
 
 ### Bulk builds
 
-`build_all.py` compiles the full board × pointing-device × OLED matrix. It
-always passes `USER_NAME=holykeebs` and a unique `TARGET` per build (so parallel
-builds don't clobber each other). Run `python3 build_all.py` (`--help` for jobs
-/ parallelism).
+`build_all.py` compiles the release matrix: every released image is Vial,
+built inside the sibling `../vial-qmk` checkout (`HK_VIAL_QMK` overrides the
+path) on the `vial` keymap. That is the modular board × pointing-device × OLED
+matrix (device-less builds use `OLED=stock`, as the holykeebs OLED needs the
+pointing code) plus one image per keyball (61plus in both wheel-LED variants).
+No debug builds. It always passes `USER_NAME=holykeebs` and a unique `TARGET`
+per build (so parallel builds don't clobber each other). Run
+`python3 build_all.py` (`--help` for jobs / parallelism).
 
-The matrix also covers the Vial firmware, which builds inside the sibling
-`../vial-qmk` checkout (`HK_VIAL_QMK` overrides the path): `keyball61plus:vial`
-plus `keyball/keyball{39,44,61}:vial`. Those keyball boards keep the stock
-Keyball firmware there and take no build vars.
+File names are `<kb>_vial_<left>_<right>.uf2` for the modular boards (a device
+names its side, `oled`/`none` fill the rest, dual builds add
+`_flash_on_<side>`) and `holykeebs_keyballNN_vial_oled.uf2` for the keyballs.
+The docs site's firmware picker constructs these names, so it must follow any
+change to the scheme. Nothing built from this repo ships: the `via`/`hk`
+keymaps stay for CI and for building VIA firmware by hand.
 
 `python3 build_all.py --publish` is the formal release flow: it requires this
 repo **and** the overlay to be on `hk-master`, clean, and in sync with origin,

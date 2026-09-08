@@ -27,8 +27,8 @@ class Command:
     def __init__(self, kb, km, repo=None) -> None:
         self.kb = kb
         self.km = km
-        # Checkout to run `make` in; None builds in this repo. The vial fork's
-        # keyball61plus builds set this to the vial-qmk checkout.
+        # Checkout to run `make` in; None builds in this repo. Every released
+        # build is Vial and sets this to the vial-qmk checkout.
         self.repo = repo
         self.arguments = []
         self.left_pointing_device = None
@@ -73,96 +73,98 @@ class Command:
         parts.append(self.kb.replace('/', '_'))
         parts.append(self.km)
 
-        if not self.kb.startswith('keyball'):
-            if not self.left_pointing_device and not self.right_pointing_device:
-                if self.oled:
-                    parts.append('oled')
-                else:
-                    parts.append('none')
+        # <kb>_<keymap>_<left>_<right>: a pointing device names its side, an
+        # OLED fills an empty side with 'oled', otherwise 'none'. Device-less
+        # builds collapse to a single 'oled'/'none' slot. The keyballs (fixed
+        # pointing config, OLED always on) land on '<kb>_<keymap>_oled'.
+        if not self.left_pointing_device and not self.right_pointing_device:
+            if self.oled:
+                parts.append('oled')
             else:
-                if self.left_pointing_device:
-                    parts.append(self.left_pointing_device)
-                elif self.oled:
-                    parts.append('oled')
-                else:
-                    parts.append('none')
+                parts.append('none')
+        else:
+            if self.left_pointing_device:
+                parts.append(self.left_pointing_device)
+            elif self.oled:
+                parts.append('oled')
+            else:
+                parts.append('none')
 
-                if self.right_pointing_device:
-                    parts.append(self.right_pointing_device)
-                elif self.oled:
-                    parts.append('oled')
-                else:
-                    parts.append('none')
+            if self.right_pointing_device:
+                parts.append(self.right_pointing_device)
+            elif self.oled:
+                parts.append('oled')
+            else:
+                parts.append('none')
 
-        console = False
         for argument in self.arguments:
             if argument.startswith('SIDE='):
                 side = argument[len('SIDE='):]
                 parts.append('flash_on_' + side)
             elif argument == 'WHEEL_LED=yes':
                 parts.append('wheel_led')
-            elif argument == 'CONSOLE=yes':
-                console = True
-        if console:
-            parts.insert(0, 'debug')
         return '_'.join(parts)
 
-def build_commands():
+MODULAR_BOARDS = ['holykeebs/corne', 'holykeebs/spankbd', 'holykeebs/lily58', 'holykeebs/sweeq']
+POINTING_DEVICES = ['trackpoint', 'trackball', 'cirque35', 'cirque40', 'tps43', '']
+# Pairs that make no sense on one keyboard (two Cirque sizes).
+SKIP_POINTING_DEVICES = [('cirque35', 'cirque40'), ('cirque40', 'cirque35')]
+
+def modular_commands(make_command):
+    """Enumerate the pointing-device x OLED matrix for the modular boards.
+
+    make_command(kb, has_device) returns a fresh Command for that board; the
+    keymap and repo are the caller's business.
+    """
     commands = []
-    skip_pointing_devices =[('cirque35', 'cirque40'), ('cirque40', 'cirque35')]
-    for console_enabled in [True, False]:
-        for kb in ['crkbd/rev1', 'holykeebs/spankbd', 'lily58/rev1', 'holykeebs/sweeq']:
-            for left_pointing_device in ['trackpoint', 'trackball', 'cirque35', 'cirque40', 'tps43', '']:
-                for right_pointing_device in ['trackpoint', 'trackball', 'cirque35', 'cirque40', 'tps43', '']:
-                    if (left_pointing_device, right_pointing_device) in skip_pointing_devices:
-                        print('Skipping configuration: ', left_pointing_device, right_pointing_device)
-                        continue
-                    # by default use the via keymap, but if we have a pointing device, pull in the hk keymap with the pointing
-                    # device layer
-                    keymap = 'via'
-                    if left_pointing_device or right_pointing_device:
-                        keymap = 'hk'
-                    if left_pointing_device and right_pointing_device:
-                        for side in ('left', 'right'):
-                            command = Command(kb, keymap)
-                            if keymap == 'hk' and console_enabled:
-                                command.add_argument(f'CONSOLE=yes')
+    for kb in MODULAR_BOARDS:
+        for left_pointing_device in POINTING_DEVICES:
+            for right_pointing_device in POINTING_DEVICES:
+                if (left_pointing_device, right_pointing_device) in SKIP_POINTING_DEVICES:
+                    print('Skipping configuration: ', left_pointing_device, right_pointing_device)
+                    continue
+                has_device = bool(left_pointing_device or right_pointing_device)
+                if left_pointing_device and right_pointing_device:
+                    for side in ('left', 'right'):
+                        command = make_command(kb, has_device)
+                        command.set_pointing(left_pointing_device, 'left')
+                        command.set_pointing(right_pointing_device, 'right')
+                        command.add_argument(f'POINTING_DEVICE={left_pointing_device}_{right_pointing_device}')
+                        command.add_argument(f'SIDE={side}')
+                        if left_pointing_device == 'trackball' or right_pointing_device == 'trackball':
+                            command.add_argument(f'TRACKBALL_RGB_RAINBOW=yes')
+                        commands.append(command)
+                else:
+                    for with_oled in [True, False]:
+                        command = make_command(kb, has_device)
+                        if with_oled:
+                            # The holykeebs OLED needs the pointing code (oled.c
+                            # links against holykeebs.c), so a device-less
+                            # build gets the stock QMK OLED.
+                            command.oled = 'yes' if has_device else 'stock'
+                            # flip the OLED if there's a pointing device so the one on the peripheral side shows the
+                            # layer and keylogger, otherwise we get the logo
+                            if has_device:
+                                command.add_argument(f'OLED_FLIP=yes')
+                        if left_pointing_device:
                             command.set_pointing(left_pointing_device, 'left')
-                            command.set_pointing(right_pointing_device, 'right')
-                            command.add_argument(f'POINTING_DEVICE={left_pointing_device}_{right_pointing_device}')
-                            command.add_argument(f'SIDE={side}')
-                            if left_pointing_device == 'trackball' or right_pointing_device == 'trackball':
+                            command.add_argument(f'POINTING_DEVICE={left_pointing_device}')
+                            command.add_argument(f'POINTING_DEVICE_POSITION=left')
+                            if left_pointing_device == 'trackball':
                                 command.add_argument(f'TRACKBALL_RGB_RAINBOW=yes')
-                            commands.append(command)
-                    else:
-                        for with_oled in [True, False]:
-                            command = Command(kb, keymap)
-                            if keymap == 'hk' and console_enabled:
-                                command.add_argument(f'CONSOLE=yes')
-                            if with_oled:
-                                command.oled = 'stock' if keymap == 'via' else 'yes'
-                                # flip the OLED if there's a pointing device so the one on the peripheral side shows the
-                                # layer and keylogger, otherwise we get the logo
-                                if left_pointing_device or right_pointing_device:
-                                    command.add_argument(f'OLED_FLIP=yes')
-                            if left_pointing_device:
-                                command.set_pointing(left_pointing_device, 'left')
-                                command.add_argument(f'POINTING_DEVICE={left_pointing_device}')
-                                command.add_argument(f'POINTING_DEVICE_POSITION=left')
-                                if left_pointing_device == 'trackball':
-                                    command.add_argument(f'TRACKBALL_RGB_RAINBOW=yes')
-                            elif right_pointing_device:
-                                command.set_pointing(right_pointing_device, 'right')
-                                command.add_argument(f'POINTING_DEVICE={right_pointing_device}')
-                                command.add_argument(f'POINTING_DEVICE_POSITION=right')
-                                if right_pointing_device == 'trackball':
-                                    command.add_argument(f'TRACKBALL_RGB_RAINBOW=yes')
-                            else:
-                                pass
-
-                            commands.append(command)
-
+                        elif right_pointing_device:
+                            command.set_pointing(right_pointing_device, 'right')
+                            command.add_argument(f'POINTING_DEVICE={right_pointing_device}')
+                            command.add_argument(f'POINTING_DEVICE_POSITION=right')
+                            if right_pointing_device == 'trackball':
+                                command.add_argument(f'TRACKBALL_RGB_RAINBOW=yes')
+                        commands.append(command)
     return commands
+
+def vial_commands(vial):
+    """The modular matrix on the vial keymap (the hk keymap over the Vial
+    protocol), built in the vial-qmk checkout."""
+    return modular_commands(lambda kb, has_device: Command(kb, 'vial', repo=vial))
 
 class BuildError(Exception):
     def __init__(self, file_name, log_path, message):
@@ -171,8 +173,6 @@ class BuildError(Exception):
         self.log_path = log_path
 
 def destination_for(base_dir, file_name):
-    if file_name.startswith('debug'):
-        return f'{base_dir}/debug/{file_name}.uf2'
     return f'{base_dir}/{file_name}.uf2'
 
 def finalize_command(command, make_jobs, parallel):
@@ -322,7 +322,7 @@ def _gh(*args):
     return subprocess.run(['gh', *args, '-R', PUBLISH_REPO],
                           capture_output=True, text=True, check=True).stdout
 
-def release_notes(firmware_count, debug_count):
+def release_notes(firmware_count):
     state = lambda d: (_repo_state(d) or 'unknown').replace('  ', ' @ ')
     overlay = _overlay_dir()
     vial = _vial_dir()
@@ -335,7 +335,7 @@ def release_notes(firmware_count, debug_count):
         f'- qmk_firmware: {state(_SCRIPT_DIR)}',
         f'- holykeebs-userspace: {state(overlay) if overlay else "unknown"}',
         f'- vial-qmk: {state(vial) if vial else "unknown"}',
-        f'- firmwares: {firmware_count} ({debug_count} debug)',
+        f'- firmwares: {firmware_count}',
     ]) + '\n'
 
 def publish(base_dir, commands, dry_run):
@@ -358,7 +358,6 @@ def publish(base_dir, commands, dry_run):
     prune = sorted(remote_names - local_names - PRESERVED_ASSETS)
     kept = sorted(remote_names & PRESERVED_ASSETS)
 
-    debug_count = sum(1 for n in local_names if n.startswith('debug_'))
     print(f'publish: {len(paths)} assets to upload, {len(prune)} stale remote '
           f'asset(s) to prune, preserving {kept or "none"}')
     if dry_run:
@@ -379,65 +378,51 @@ def publish(base_dir, commands, dry_run):
               f'({time.time() - start:.0f}s)')
 
     _gh('release', 'edit', PUBLISH_TAG,
-        '--notes', release_notes(len(paths) - 1, debug_count))
+        '--notes', release_notes(len(paths) - 1))
     print(f'publish: done, release notes updated '
           f'(https://github.com/{PUBLISH_REPO}/releases/tag/{PUBLISH_TAG})')
     return 0
 
+KEYBALLS = ('holykeebs/keyball39', 'holykeebs/keyball44', 'holykeebs/keyball61')
+
 def all_commands():
-    """The full firmware matrix: dedicated keyball boards (VIA here, Vial from
-    the vial-qmk fork), the modular board x pointing-device x OLED matrix, and
-    keyball61plus from both forks (this repo and vial-qmk), deduplicated."""
-    commands = [
-        Command('keyball/keyball39', 'via'),
-        Command('keyball/keyball44', 'via'),
-        Command('keyball/keyball61', 'via'),
-    ]
-    for command in build_commands():
+    """The full firmware matrix. Every released image is Vial, built in the
+    vial-qmk checkout: the modular board x pointing-device x OLED matrix on
+    the vial keymap, plus one image per keyball. The qmk_firmware tree is the
+    source of the board directories (and still builds the via/hk keymaps for
+    whoever wants VIA), but nothing from it ships."""
+    vial = _vial_dir()
+    if not vial:
+        raise SystemExit('vial-qmk checkout not found (HK_VIAL_QMK or ../vial-qmk); '
+                         'every released build is Vial, so it is required')
+
+    commands = []
+    for command in vial_commands(vial):
+        # Redundant with the board rules.mk, kept so commands.txt is
+        # self-describing.
         command.prepend_argument('USER_NAME=holykeebs')
         commands.append(command)
 
-    # keyball61plus runs on the holykeebs userspace but isn't part of the modular
-    # POINTING_DEVICE matrix above: it's always built dual-PMW3360 combined (the
-    # installed ball count is detected at runtime), so add its variants directly.
+    # The keyballs run on the holykeebs userspace but aren't part of the modular
+    # POINTING_DEVICE matrix above: they're always built dual-PMW3360 combined
+    # (the installed ball count is detected at runtime), so add them directly.
     # Keyballs ship with the OLED fitted, so every build enables it.
-    # Both wheel-LED variants: the default holds the LED under each scroll wheel
-    # dark (the wheel body scatters it), WHEEL_LED=yes lights it like any other
-    # key, for whoever prefers that.
-    for km in ('via', 'default'):
-        for wheel_led in (False, True):
-            command = Command('holykeebs/keyball61plus', km)
+    # keyball61plus additionally gets both wheel-LED variants: the default holds
+    # the LED under each scroll wheel dark (the wheel body scatters it),
+    # WHEEL_LED=yes lights it like any other key, for whoever prefers that.
+    for kb in KEYBALLS + ('holykeebs/keyball61plus',):
+        variants = (False, True) if kb == 'holykeebs/keyball61plus' else (False,)
+        for wheel_led in variants:
+            command = Command(kb, 'vial', repo=vial)
             command.add_argument('USER_NAME=holykeebs')
             if wheel_led:
                 command.add_argument('WHEEL_LED=yes')
             command.oled = 'yes'
             commands.append(command)
 
-    # Vial builds live in the vial-qmk fork (Vial needs its older QMK base), so
-    # they build inside that checkout and join the matrix here. Skipped with a
-    # warning when the checkout is absent; a publish requires it (see
-    # publish_preflight). keyball61plus runs on the userspace; keyball39/44/61
-    # carry the stock keyball firmware there and take no build vars, their
-    # keymap rules.mk already enabling RGBLIGHT and the OLED.
-    vial = _vial_dir()
-    if vial:
-        for wheel_led in (False, True):
-            command = Command('holykeebs/keyball61plus', 'vial', repo=vial)
-            command.add_argument('USER_NAME=holykeebs')
-            if wheel_led:
-                command.add_argument('WHEEL_LED=yes')
-            command.oled = 'yes'
-            commands.append(command)
-        for kb in ('keyball/keyball39', 'keyball/keyball44', 'keyball/keyball61'):
-            commands.append(Command(kb, 'vial', repo=vial))
-    else:
-        print('vial-qmk checkout not found (HK_VIAL_QMK or ../vial-qmk); '
-              'skipping vial builds')
-
-    # Drop duplicate configurations. The console_enabled loop in build_commands()
-    # regenerates every `via` build identically (CONSOLE only affects `hk`), which
-    # both wastes a rebuild and breaks the unique-TARGET invariant that keeps
-    # concurrent builds from racing on a shared .build/obj_<TARGET> and output.
+    # Drop duplicate configurations, keeping the unique-TARGET invariant that
+    # keeps concurrent builds from racing on a shared .build/obj_<TARGET> and
+    # output.
     seen = set()
     unique = []
     for command in commands:
@@ -498,7 +483,7 @@ def main() -> int:
     commands = all_commands()
 
     base_dir = 'build_all'
-    for sub in ('debug', 'previous', 'logs'):
+    for sub in ('previous', 'logs'):
         os.makedirs(f'{base_dir}/{sub}', exist_ok=True)
 
     for command in commands:
