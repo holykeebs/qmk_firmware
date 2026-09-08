@@ -1,0 +1,173 @@
+{
+  "name": "Keyball39",
+  "vendorId": "0xC3AC",
+  "productId": "0x3142",
+  "matrix": {
+    "rows": 8,
+    "cols": 6
+  },
+  "menus": ["qmk_rgb_matrix"],
+  "customKeycodes": [{
+      "name": "HK_SAVE", "title": "Save the current holykeebs settings to EEPROM", "shortName": "HK\nSave"
+    }, {
+      "name": "HK_RESET", "title": "Reset the holykeebs settings to their defaults", "shortName": "HK\nRst"
+    }, {
+      "name": "HK_DUMP", "title": "Dump the holykeebs settings to the console (debug firmware only)", "shortName": "HK\nDump"
+    }, {
+      "name": "HK_P_SET_D", "title": "Hold, then tap up/down to change the pointer sensitivity", "shortName": "Sens\nSet"
+    }, {
+      "name": "HK_P_SET_S", "title": "Hold, then tap up/down to change the sniping sensitivity", "shortName": "Snipe\nSens"
+    }, {
+      "name": "HK_P_SET_THR", "title": "Hold, then tap up/down to change the ball's scroll throttle", "shortName": "Scrl\nThr"
+    }, {
+      "name": "HK_S_MODE", "title": "Hold for sniping mode (slow, precise pointer)", "shortName": "Snipe"
+    }, {
+      "name": "HK_S_MODE_T", "title": "Toggle sniping mode", "shortName": "Snipe\nTgl"
+    }, {
+      "name": "HK_D_MODE", "title": "Hold for drag scroll (ball movement scrolls)", "shortName": "Drag\nScrl"
+    }, {
+      "name": "HK_D_MODE_T", "title": "Toggle drag scroll", "shortName": "Drag\nTgl"
+    }, {
+      "name": "HK_C_SCROLL", "title": "Cycle the scroll lock: off, horizontal, vertical", "shortName": "Scrl\nLock"
+    }, {
+      "name": "HK_I_SCROLL", "title": "Invert the ball's scroll direction", "shortName": "Scrl\nInv"
+    }, {
+      "name": "HK_AML_T", "title": "Toggle the auto-mouse layer", "shortName": "Auto\nMouse"
+    }, {
+      "name": "HK_AML_UP", "title": "Increase the auto-mouse layer timeout by 50ms", "shortName": "AML\n+50"
+    }, {
+      "name": "HK_AML_DN", "title": "Decrease the auto-mouse layer timeout by 50ms", "shortName": "AML\n-50"
+    }, {
+      "name": "HK_BONGO_T", "title": "Toggle the bongocat OLED animation (hold shift for the other half)", "shortName": "Bongo"
+    }, {
+      "name": "HK_ENC_SCR_U", "title": "Scroll up by one scroll wheel detent", "shortName": "Scrl\nUp"
+    }, {
+      "name": "HK_ENC_SCR_D", "title": "Scroll down by one scroll wheel detent", "shortName": "Scrl\nDn"
+    }],
+  "layouts": {
+    "labels": [
+      ["Ball availability", "None", "Right", "Left", "Dual"]
+    ],
+    "keymap": [
+      [{
+          "x": 2
+        }, "0,2", {
+          "x": 7.75
+        }, "4,2"],
+      [{
+          "y": -0.875, "x": 3
+        }, "0,3", {
+          "x": 5.75
+        }, "4,3"],
+      [{
+          "y": -0.875, "x": 1
+        }, "0,1", {
+          "x": 2
+        }, "0,4", {
+          "x": 3.75
+        }, "4,4", {
+          "x": 2
+        }, "4,1"],
+      [{
+          "y": -0.65
+        }, "0,0", {
+          "x": 11.75
+        }, "4,0"],
+      [{
+          "y": -0.6, "x": 2
+        }, "1,2", {
+          "x": 7.75
+        }, "5,2"],
+      [{
+          "y": -0.875, "x": 3
+        }, "1,3", {
+          "x": 5.75
+        }, "5,3"],
+      [{
+          "y": -0.875, "x": 1
+        }, "1,1", {
+          "x": 2
+        }, "1,4", {
+          "x": 3.75
+        }, "5,4", {
+          "x": 2
+        }, "5,1"],
+      [{
+          "y": -0.65
+        }, "1,0", {
+          "x": 11.75
+        }, "5,0"],
+      [{
+          "y": -0.6, "x": 2
+        }, "2,2", {
+          "x": 7.75
+        }, "6,2"],
+      [{
+          "y": -0.875, "x": 3
+        }, "2,3", {
+          "x": 5.75
+        }, "6,3"],
+      [{
+          "y": -0.875, "x": 1
+        }, "2,1", {
+          "x": 2
+        }, "2,4", {
+          "x": 3.75
+        }, "6,4", {
+          "x": 2
+        }, "6,1"],
+      [{
+          "y": -0.65
+        }, "2,0", {
+          "x": 11.75
+        }, "6,0"],
+      [{
+          "y": -0.6, "x": 2, "c": "#aaaaaa"
+        }, "3,2\n\n\n0,0", {
+          "x": 7.75
+        }, "7,2\n\n\n0,0"],
+      [{
+          "y": -1.0, "x": 2
+        }, "3,2\n\n\n0,1", "\n\n\n0,2", {
+          "x": 7.75
+        }, "7,2\n\n\n0,2"],
+      [{
+          "y": -0.75, "x": 1
+        }, "3,1\n\n\n0,0", {
+          "x": 9.75
+        }, "7,1\n\n\n0,0"],
+      [{
+          "y": -1.0, "x": 1
+        }, "3,1\n\n\n0,1", "\n\n\n0,2", {
+          "x": 9.75
+        }, "7,1\n\n\n0,2"],
+      [{
+          "y": -0.75, "x": 3.15
+        }, "3,3\n\n\n0,0", {
+          "x": 5.45
+        }, "7,3\n\n\n0,0"],
+      [{
+          "y": -1.0, "x": 3.15
+        }, "3,3\n\n\n0,1", "\n\n\n0,2", {
+          "x": 5.45
+        }, "7,3\n\n\n0,2"],
+      [{
+          "y": -0.9
+        }, "3,0", {
+          "x": 11.75
+        }, "7,0"],
+      [{
+          "r": 10, "rx": 5.35, "ry": 5.5, "y": -1.775, "x": -1.3
+        }, "3,4"],
+      [{
+          "r": 20, "rx": 6.4, "ry": 5.7, "y": -1.54, "x": -1.435
+        }, "3,5"],
+      [{
+          "r": -20, "rx": 10.15, "y": -2.46, "x": -2.18
+        }, "7,5"],
+      [{
+          "r": -10, "rx": 11.15, "ry": 5.5, "y": -2.24, "x": -2.4
+        }, "7,4"]
+    ]
+  }
+}
