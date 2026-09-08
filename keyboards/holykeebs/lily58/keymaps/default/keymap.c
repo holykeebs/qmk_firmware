@@ -102,7 +102,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 }
 
 //SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
-#ifdef OLED_ENABLE
+#if defined(OLED_ENABLE) && !defined(HK_OLED_ENABLE)
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   if (!is_keyboard_master())
