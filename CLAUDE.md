@@ -45,29 +45,40 @@ make holykeebs/sweeq:hk -e USER_NAME=holykeebs -e POINTING_DEVICE=trackball -e P
 Append `:flash` to the target to flash, or copy the resulting `<target>.uf2`
 to the RP2040 bootloader drive.
 
-### `USER_NAME=holykeebs` is mandatory (and the failure is silent)
-
-The keymaps include the userspace header by full path
-(`#include "users/holykeebs/holykeebs.h"`). So if you omit `USER_NAME`, the
-build still **compiles and links successfully** — the header resolves the
-`HK_*` keycode enum, and QMK's weak default hooks satisfy the linker — but the
-firmware is **silently missing the entire userspace**: none of
-`users/holykeebs/*.c` is compiled, so there's no pointing-device processing, no
-`HK_*` keycode handling, and no EEPROM config.
+### `USER_NAME=holykeebs` (set by the board `rules.mk` on most boards)
 
 `USER_NAME=holykeebs` is what pulls in `users/holykeebs/rules.mk`, which:
 - adds `holykeebs.c` / `oled.c` / etc. to the build, and
 - sets `SERIAL_DRIVER = vendor` for splits.
 
-Without it, a split board instead fails later with
-`SOFT_SERIAL_PIN undeclared` in `platforms/chibios/drivers/serial.c` (the
-serial driver was never switched off the soft-serial default). If you see that
-error, you forgot `USER_NAME=holykeebs`.
+The board-level `rules.mk` of `holykeebs/corne`, `holykeebs/lily58`,
+`holykeebs/sweeq`, `holykeebs/spankbd` and `holykeebs/keyball61plus` sets it,
+so bare builds of those (and CI's mass-compile, which passes no `-e` vars)
+work; passing it on the command line is redundant but harmless. `aztec42`
+does not set it and still needs the flag.
+
+Where it is missing, the failure is silent: the keymaps include the userspace
+header by full path (`#include "users/holykeebs/holykeebs.h"`), so the build
+still **compiles and links successfully** — the header resolves the `HK_*`
+keycode enum, and QMK's weak default hooks satisfy the linker — but the
+firmware is **silently missing the entire userspace**: none of
+`users/holykeebs/*.c` is compiled, so there's no pointing-device processing, no
+`HK_*` keycode handling, and no EEPROM config. A split board instead fails
+later with `SOFT_SERIAL_PIN undeclared` in
+`platforms/chibios/drivers/serial.c` (the serial driver was never switched off
+the soft-serial default). If you see that error, `USER_NAME=holykeebs` is not
+reaching the build.
 
 ### Keyboards and keymaps
 
 Boards driven by this userspace: `holykeebs/sweeq`, `holykeebs/spankbd`,
-`holykeebs/aztec42`, `holykeebs/keyball61plus`, `crkbd/rev1`, `lily58/rev1`.
+`holykeebs/aztec42`, `holykeebs/keyball61plus`, `holykeebs/corne`, `holykeebs/lily58`.
+
+`holykeebs/corne` and `holykeebs/lily58` are self-contained copies of upstream
+`crkbd/rev1` and `lily58/rev1` (RP2040 pins, holykeebs OLED/font hooks, VIA
+keymaps) so both forks carry identical board dirs; the upstream trees are
+stock. They keep the upstream USB VID/PID and matrix, so the stock VIA
+definitions still match.
 
 Keymap: use `hk` when a pointing device is present (it adds the pointer/scroll
 layer); `via` for a build with no pointing device. (Some boards, e.g. aztec42,

@@ -129,4 +129,3 @@ compile_commands.json
 # /keyboards/**/keymaps/via/*
 # /keyboards/**/keymaps/vial/*
 build_all/
-keyboards/crkbd/keymaps/idank/pass.h
