@@ -2,7 +2,7 @@
     "url": "https://github.com/idank/keyboards/tree/main/sweeq",
     "maintainer": "idank",
     "keyboard_name": "Sweeq",
-    "manufacturer": "idank",
+    "manufacturer": "holykeebs",
     "processor": "RP2040",
     "bootloader": "rp2040",
     "usb": {

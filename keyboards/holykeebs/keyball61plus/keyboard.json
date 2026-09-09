@@ -6,7 +6,7 @@
         "pid": "0x3141",
         "device_version": "1.0.0"
     },
-    "manufacturer": "Holykeebs",
+    "manufacturer": "holykeebs",
     "keyboard_name": "Keyball61+",
     "ws2812": {
         "driver": "vendor"
