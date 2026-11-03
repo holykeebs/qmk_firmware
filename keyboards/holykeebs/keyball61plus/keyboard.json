@@ -122,7 +122,8 @@
         "rotary": [
             {
                 "pin_a": "GP13",
-                "pin_b": "GP14"
+                "pin_b": "GP14",
+                "resolution": 2
             }
         ]
     },
@@ -133,7 +134,8 @@
                 "rotary": [
                     {
                         "pin_a": "GP14",
-                        "pin_b": "GP13"
+                        "pin_b": "GP13",
+                        "resolution": 2
                     }
                 ]
             }
