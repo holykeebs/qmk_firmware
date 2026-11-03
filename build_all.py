@@ -3,6 +3,7 @@ import subprocess
 import os
 import argparse
 import json
+import re
 import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -230,17 +231,33 @@ def _repo_state(repo_dir):
     return f'{branch}  {short}' + (' (dirty)' if dirty else '')
 
 def _overlay_dir():
-    """Where the holykeebs userspace overlay lives: QMK_USERSPACE env, else the
-    global `qmk config user.overlay_dir`. None if neither is set."""
+    """Where the holykeebs userspace overlay lives: QMK_USERSPACE env, else
+    what the qmk CLI resolves (the global `user.overlay_dir`). None if neither
+    is set. Mirrors the Makefile's userspace detection (QMK #26117)."""
     env = os.environ.get('QMK_USERSPACE')
     if env:
         return env
-    try:
-        out = subprocess.run(['qmk', 'config', 'user.overlay_dir'],
-                             capture_output=True, text=True, check=True).stdout.strip()
-    except Exception:
+
+    def qmk(*args):
+        try:
+            return subprocess.run(['qmk', *args], capture_output=True, text=True,
+                                  check=True).stdout.strip()
+        except Exception:
+            return None
+
+    # qmk_cli >= 1.1.7 answers directly with the bare path ('' when unset).
+    # Older CLIs don't take a variable name; their output then isn't a single
+    # bare path, so fall through.
+    out = qmk('env', 'QMK_USERSPACE')
+    if out is not None and '\n' not in out and '=' not in out:
+        return out or None
+
+    # Legacy: parse `user.overlay_dir=<path>`. milc 2.x (qmk_cli 1.2.0) appends
+    # the value's source, `<path> (config)`; drop it.
+    out = qmk('config', '-ro', 'user.overlay_dir')
+    if not out or '=' not in out:
         return None
-    val = out.split('=', 1)[1].strip() if '=' in out else ''
+    val = re.sub(r'\s+\([a-z_]+\)$', '', out.split('=', 1)[1].strip())
     return val if val and val != 'None' else None
 
 def _vial_dir():
